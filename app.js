@@ -83,8 +83,18 @@ const minDay = () => addDays(sod(Date.now()), -BACK_DAYS);
 // ---------- boot ----------
 applyStatic();
 store.onChange(() => render());
+// 起動画面（アイコン1個）は最低0.7秒見せてから、ふわっと消す
+const bootStart = performance.now();
+const hideBoot = () => {
+  const boot = $("#boot");
+  if (boot.hidden || boot.classList.contains("out")) return;
+  setTimeout(() => {
+    boot.classList.add("out");
+    setTimeout(() => (boot.hidden = true), 350);
+  }, Math.max(0, 700 - (performance.now() - bootStart)));
+};
 store.init((user) => {
-  $("#boot").hidden = true;
+  hideBoot();
   $("#login").hidden = !!user;
   $("#app").hidden = !user;
   if (user) maybeShowQuote();
@@ -162,7 +172,7 @@ function renderRecord() {
   const list = clipped(today, addDays(today, 1)).sort((a, b) => b.s - a.s);
 
   el.innerHTML = `
-    ${q ? `<div class="quote-strip">${esc(q.t)}<span class="who">— ${esc(q.a)}</span></div>` : ""}
+    ${q ? `<div class="quote-strip"><p class="q">${esc(q.t)}</p><span class="who">${esc(q.a)}</span></div>` : ""}
     ${longOnes.map((e) => `
       <div class="alert">
         ${esc(t("long_alert", catOf(e.cat).label, hm(e.start)))}
@@ -178,8 +188,7 @@ function renderRecord() {
         const c = catOf(e.cat);
         return `
         <div class="run ${now - e.start >= LONG_MS ? "long" : ""}" style="--c:${c.color}">
-          <div class="name"><span class="dot" style="background:${c.color}"></span>${esc(c.label)}
-            <span class="since">${hm(e.start)}〜</span></div>
+          <div class="name">${esc(c.label)} · ${hm(e.start)}〜</div>
           <div class="timer" data-timer="${e.start}">${timer(now - e.start)}</div>
           <button class="end" data-end="${e.id}">END</button>
           <input class="memo" data-memo="${e.id}" placeholder="${t("memo")}" value="${esc(e.memo)}" enterkeyhint="done">
@@ -498,7 +507,7 @@ function renderSettings() {
       <button class="btn primary wide" id="x-go">${t("export_btn")}</button>
     </div>
 
-    <p class="muted" style="font-size:11px;text-align:center;margin-top:28px">Time Stamper · ${store.mode === "firebase" ? t("sync_cloud") : t("sync_local")}</p>
+    <p class="muted" style="font-size:11px;text-align:center;margin-top:28px">Do What · ${store.mode === "firebase" ? t("sync_cloud") : t("sync_local")}</p>
   `;
 
   const save = (items) => store.saveCategories(items);
@@ -559,7 +568,7 @@ async function exportCsv() {
   const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `TimeStamper_${fromV}_${toV}.csv`;
+  a.download = `DoWhat_${fromV}_${toV}.csv`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);

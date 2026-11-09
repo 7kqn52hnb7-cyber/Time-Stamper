@@ -1,7 +1,7 @@
 // ネット優先・つながらないときは保存済みのファイルで起動
-const CACHE = "time-stamper-v4";
+const CACHE = "dowhat-v5";
 const SHELL = ["./", "index.html", "style.css", "app.js", "store.js", "i18n.js", "firebase-config.js", "quotes.js",
-  "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"];
+  "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png", "icons/launch.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
