@@ -584,6 +584,51 @@ function maybeShowQuote() {
   o.onclick = () => (o.hidden = true);
 }
 
+// ---------- 引っ張って更新（ホーム画面から開いたときだけ） ----------
+const isStandalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+if (isStandalone || new URLSearchParams(location.search).has("ptr")) {
+  const TRIGGER = 70;
+  const ind = document.createElement("div");
+  ind.className = "ptr";
+  ind.innerHTML = `<div class="ptr-ring"><svg viewBox="0 0 24 24"><path d="M12 5v12M6 11l6 6 6-6"/></svg></div><span></span>`;
+  document.body.appendChild(ind);
+  let y0 = null, dist = 0;
+  const blocked = () => !$("#modal").hidden || !$("#quote-overlay").hidden || $("#app").hidden;
+  const show = (d) => {
+    const ready = d >= TRIGGER;
+    ind.style.transition = "none"; // 引っ張っている間は指にぴったり付いてくる
+    ind.style.transform = `translate(-50%, ${Math.min(d, 110) - 60}px)`;
+    ind.style.opacity = Math.min(1, d / TRIGGER);
+    ind.classList.toggle("ready", ready);
+    ind.querySelector("span").textContent = ready ? t("ptr_release") : t("ptr_pull");
+  };
+  document.addEventListener("touchstart", (e) => {
+    y0 = window.scrollY <= 0 && !blocked() && e.touches.length === 1 ? e.touches[0].clientY : null;
+    dist = 0;
+  }, { passive: true });
+  document.addEventListener("touchmove", (e) => {
+    if (y0 == null) return;
+    dist = (e.touches[0].clientY - y0) * 0.55;
+    if (dist <= 0 || window.scrollY > 0) { dist = 0; ind.style.opacity = 0; return; }
+    show(dist);
+  }, { passive: true });
+  document.addEventListener("touchend", () => {
+    if (y0 == null) return;
+    y0 = null;
+    ind.style.transition = "";
+    if (dist >= TRIGGER) {
+      ind.classList.add("loading");
+      ind.querySelector("span").textContent = t("ptr_loading");
+      ind.style.transform = "translate(-50%, 30px)";
+      setTimeout(() => location.reload(), 150);
+    } else {
+      ind.style.transform = "translate(-50%, -60px)";
+      ind.style.opacity = 0;
+    }
+    dist = 0;
+  });
+}
+
 // ---------- service worker ----------
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});

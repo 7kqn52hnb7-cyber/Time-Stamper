@@ -26,6 +26,7 @@ const DICT = {
     export_hint: "CSV 書き出し（Excel で開けます）", from: "開始日", to: "終了日", export_btn: "CSV を書き出す",
     need_range: "期間を入れてください", bad_range: "終了日は開始日以降にしてください", exported: (n) => `${n}件を書き出しました`,
     language: "言語", sync_cloud: "クラウド同期", sync_local: "ローカル保存", tap_start: "タップして始める",
+    ptr_pull: "引っ張って更新", ptr_release: "離して更新", ptr_loading: "更新中…",
     csv_head: ["日付", "曜日", "カテゴリ", "開始", "終了", "時間(分)", "メモ"], csv_running: "記録中",
   },
   en: {
@@ -54,6 +55,7 @@ const DICT = {
     export_hint: "CSV export (opens in Excel)", from: "From", to: "To", export_btn: "Export CSV",
     need_range: "Enter a date range", bad_range: "End date must be on or after start date", exported: (n) => `Exported ${n} records`,
     language: "Language", sync_cloud: "Cloud sync", sync_local: "Local storage", tap_start: "Tap to begin",
+    ptr_pull: "Pull to refresh", ptr_release: "Release to refresh", ptr_loading: "Refreshing…",
     csv_head: ["Date", "Day", "Category", "Start", "End", "Minutes", "Note"], csv_running: "Running",
   },
 };

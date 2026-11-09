@@ -1,5 +1,5 @@
 // ネット優先・つながらないときは保存済みのファイルで起動
-const CACHE = "time-stamper-v3";
+const CACHE = "time-stamper-v4";
 const SHELL = ["./", "index.html", "style.css", "app.js", "store.js", "i18n.js", "firebase-config.js", "quotes.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
@@ -17,7 +17,8 @@ self.addEventListener("fetch", (e) => {
   const sdk = url.hostname === "www.gstatic.com" && url.pathname.startsWith("/firebasejs/");
   if (!sameOrigin && !sdk) return; // Firebase の通信そのものには触らない
   e.respondWith(
-    fetch(e.request).then((res) => {
+    // 自分のファイルはブラウザの一時保存を使わず毎回サーバーに確認（更新がすぐ届くように）
+    fetch(sameOrigin ? new Request(e.request, { cache: "no-cache" }) : e.request).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
       return res;
     }).catch(() => caches.match(e.request, { ignoreSearch: true }))
