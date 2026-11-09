@@ -1,5 +1,5 @@
 // ネット優先・つながらないときは保存済みのファイルで起動
-const CACHE = "time-stamper-v2";
+const CACHE = "time-stamper-v3";
 const SHELL = ["./", "index.html", "style.css", "app.js", "store.js", "i18n.js", "firebase-config.js", "quotes.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 

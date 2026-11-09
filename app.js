@@ -123,9 +123,14 @@ setInterval(() => {
 }, 1000);
 tickClock();
 
+let hiddenAt = 0;
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") { render(); maybeShowQuote(); }
+  if (document.visibilityState === "hidden") { hiddenAt = Date.now(); return; }
+  if (hiddenAt && Date.now() - hiddenAt > 5000) store.reconnect();
+  render(); maybeShowQuote();
 });
+window.addEventListener("online", () => store.reconnect());
+window.addEventListener("pageshow", (ev) => { if (ev.persisted) store.reconnect(); });
 
 // ---------- render ----------
 function render() {

@@ -71,6 +71,7 @@ class Store {
     try {
       this.db = F.initializeFirestore(app, {
         localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }),
+        experimentalAutoDetectLongPolling: true, // 携帯回線などで通信が詰まるのを防ぐ
       });
     } catch {
       this.db = F.getFirestore(app);
@@ -90,23 +91,38 @@ class Store {
       this.emit();
     });
   }
+  // iPhone はアプリを裏に回すと通信が止まり、戻ってもしばらく古いままになる。
+  // 開き直したときに一度つなぎ直して、すぐ最新を取りにいく
+  async reconnect() {
+    if (this.mode !== "firebase" || !this.db || this.reconnecting) return;
+    this.reconnecting = true;
+    try {
+      await this.F.disableNetwork(this.db);
+      await this.F.enableNetwork(this.db);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.reconnecting = false;
+    }
+  }
   #unsub() { (this.unsubs || []).forEach((f) => f()); this.unsubs = []; }
   #col() { return this.F.collection(this.db, "users", this.user.uid, "entries"); }
   #catDoc() { return this.F.doc(this.db, "users", this.user.uid, "settings", "categories"); }
   #subscribe(u) {
     const F = this.F;
     const cutoff = Date.now() - WINDOW_DAYS * DAY;
-    const apply = (snap) => {
-      snap.docChanges().forEach((c) => {
-        if (c.type === "removed") this.entries.delete(c.doc.id);
-        else this.entries.set(c.doc.id, { id: c.doc.id, ...c.doc.data() });
-      });
+    // 2本の読み込み（直近の記録／記録中の記録）は別々に持って合わせる。
+    // 記録を終了すると「記録中」側からは外れる（removed）が、それで全体から消してはいけない
+    const parts = [new Map(), new Map()];
+    const apply = (i) => (snap) => {
+      parts[i] = new Map(snap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
+      this.entries = new Map([...parts[0], ...parts[1]]);
       this.ready = true;
       this.emit();
     };
     const onErr = (e) => console.error(e);
-    this.unsubs.push(F.onSnapshot(F.query(this.#col(), F.where("start", ">=", cutoff)), apply, onErr));
-    this.unsubs.push(F.onSnapshot(F.query(this.#col(), F.where("end", "==", null)), apply, onErr));
+    this.unsubs.push(F.onSnapshot(F.query(this.#col(), F.where("start", ">=", cutoff)), apply(0), onErr));
+    this.unsubs.push(F.onSnapshot(F.query(this.#col(), F.where("end", "==", null)), apply(1), onErr));
     this.unsubs.push(F.onSnapshot(this.#catDoc(), (snap) => {
       if (snap.exists()) {
         this.categories = snap.data().items || [];
