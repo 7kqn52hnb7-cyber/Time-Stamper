@@ -342,7 +342,7 @@ input[type=date].in, input[type=datetime-local].in { -webkit-appearance: none; a
 .logo.big { align-items: center; }
 .logo.big .logo-main { font-size: 40px; }
 .logo.big .logo-sub { font-size: 13px; margin-top: 10px; letter-spacing: .2em; }
-.boot img { width: 132px; height: 132px; animation: fade .5s ease-out; }
+.boot img { width: min(78vw, 440px); height: auto; animation: fade .5s ease-out; }
 
 /* ---------- 名言の帯（余白型） ---------- */
 .quote-strip {
@@ -379,3 +379,13 @@ input[type=date].in, input[type=datetime-local].in { -webkit-appearance: none; a
 .run .memo { grid-row: 3; background: rgba(255, 255, 255, .04); }
 .boot { z-index: 50; background: var(--bg); transition: opacity .35s ease-out; }
 .boot.out { opacity: 0; pointer-events: none; }
+
+/* ---------- 枠の強さをそろえる（記録中カード／選択中カテゴリ） ---------- */
+:root { --frame: linear-gradient(135deg, rgba(255, 196, 0, .42), rgba(244, 81, 30, .24)); }
+.run {
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--frame) border-box;
+}
+.cat.on {
+  background: linear-gradient(#1f1b16, #1f1b16) padding-box, var(--frame) border-box;
+  box-shadow: none;
+}
