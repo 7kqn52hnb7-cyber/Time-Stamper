@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Time Stamper</title>
+  <meta name="description" content="自分の時間の使い方を記録するアプリ">
+  <meta name="theme-color" content="#0d0d0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Time Stamper">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" hidden>
+    <header class="topbar">
+      <div class="brand">Time <span>Stamper</span></div>
+      <div class="clock" id="clock"></div>
+    </header>
+
+    <main>
+      <section id="view-record" class="view"></section>
+      <section id="view-daily" class="view" hidden></section>
+      <section id="view-weekly" class="view" hidden></section>
+      <section id="view-settings" class="view" hidden></section>
+    </main>
+
+    <nav class="tabs">
+      <button data-tab="record" class="active">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg><span data-i18n="tab_record">記録</span>
+      </button>
+      <button data-tab="daily">
+        <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span data-i18n="tab_daily">Daily</span>
+      </button>
+      <button data-tab="weekly">
+        <svg viewBox="0 0 24 24"><path d="M5 20V11M10 20V5M15 20v-7M20 20V8"/></svg><span data-i18n="tab_weekly">Weekly</span>
+      </button>
+      <button data-tab="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span data-i18n="tab_settings">設定</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="login" class="login" hidden>
+    <div class="login-inner">
+      <div class="brand big">Time <span>Stamper</span></div>
+      <p class="muted" data-i18n="tagline">自分の時間を、正確に。</p>
+      <button id="btn-google" class="btn primary wide" data-i18n="login_google">Google でログイン</button>
+      <details class="email-login">
+        <summary data-i18n="login_email">メールアドレスでログイン</summary>
+        <form id="form-email">
+          <input type="email" id="login-email" placeholder="メールアドレス" data-i18n-ph="email" autocomplete="username" required>
+          <input type="password" id="login-pass" placeholder="パスワード" data-i18n-ph="password" autocomplete="current-password" required>
+          <button class="btn wide" data-i18n="login">ログイン</button>
+        </form>
+      </details>
+      <p id="login-error" class="error"></p>
+    </div>
+  </div>
+
+  <div id="boot" class="boot">Time <span>Stamper</span></div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="sheet" id="sheet"></div>
+  </div>
+
+  <div id="quote-overlay" class="quote-overlay" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
