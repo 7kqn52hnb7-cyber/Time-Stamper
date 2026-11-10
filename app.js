@@ -272,6 +272,18 @@ function toast(msg, undo) {
 }
 
 // ---------- editor ----------
+// 時刻を大きく、日付は横の小さなボタン（押すとカレンダー）
+function timeField(k, label, ts, disabled) {
+  return `<div class="field ${disabled ? "off" : ""}" id="ed-${k}-field"><span>${label}</span>
+    <div class="tm-row">
+      <input class="in tm" type="time" id="ed-${k}-t" value="${hm(ts)}" ${disabled ? "disabled" : ""}>
+      <label class="date-chip">
+        <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+        <span id="ed-${k}-dl">${md(ts)}</span>
+        <input type="date" id="ed-${k}-d" value="${ymd(ts)}" ${disabled ? "disabled" : ""} aria-label="${label}">
+      </label>
+    </div></div>`;
+}
 function openEditor(entry, dayStart) {
   const isNew = !entry;
   let start, end;
@@ -296,8 +308,8 @@ function openEditor(entry, dayStart) {
       <select class="in" id="ed-cat">
         ${cats().map((c) => `<option value="${c.id}" ${c.id === curCat ? "selected" : ""}>${esc(catName(c))}${c.hidden ? t("hidden_mark") : ""}</option>`).join("")}
       </select></label>
-    <label class="field"><span>${t("start")}</span><input class="in" type="datetime-local" id="ed-start" value="${dtLocal(start)}"></label>
-    <label class="field"><span>${t("end")}</span><input class="in" type="datetime-local" id="ed-end" value="${end ? dtLocal(end) : ""}" ${isRun ? "disabled" : ""}></label>
+    ${timeField("start", t("start"), start, false)}
+    ${timeField("end", t("end"), end ?? start, isRun)}
     ${isRun ? `<label class="check"><input type="checkbox" id="ed-running" checked> ${t("still_running")}</label>` : ""}
     <label class="field"><span>${t("memo")}</span><textarea class="in" id="ed-memo" rows="2">${esc(entry?.memo)}</textarea></label>
     <p class="error" id="ed-err"></p>
@@ -311,10 +323,29 @@ function openEditor(entry, dayStart) {
   const close = () => ($("#modal").hidden = true);
   $("#modal").onclick = (ev) => { if (ev.target.id === "modal") close(); };
   $("#ed-cancel").onclick = close;
+  // 日付ボタン：押すとカレンダーが開き、選んだ日付をボタンに表示する
+  const syncChip = (k) => {
+    const v = $(`#ed-${k}-d`).value;
+    $(`#ed-${k}-dl`).textContent = v ? md(new Date(v + "T00:00").getTime()) : "--";
+  };
+  let lastStartDate = $("#ed-start-d").value;
+  $("#ed-start-d").onchange = () => {
+    // 終了日が開始日と同じだったら、一緒に動かす
+    if ($("#ed-end-d").value === lastStartDate) { $("#ed-end-d").value = $("#ed-start-d").value; syncChip("end"); }
+    lastStartDate = $("#ed-start-d").value;
+    syncChip("start");
+  };
+  $("#ed-end-d").onchange = () => syncChip("end");
   const runBox = $("#ed-running");
   if (runBox) runBox.onchange = () => {
-    $("#ed-end").disabled = runBox.checked;
-    if (!runBox.checked && !$("#ed-end").value) $("#ed-end").value = dtLocal(Date.now());
+    const off = runBox.checked;
+    $("#ed-end-t").disabled = off; $("#ed-end-d").disabled = off;
+    $("#ed-end-field").classList.toggle("off", off);
+    if (!off) { const n = Date.now(); $("#ed-end-t").value = hm(n); $("#ed-end-d").value = ymd(n); syncChip("end"); }
+  };
+  const readTime = (k) => {
+    const d = $(`#ed-${k}-d`).value, tm = $(`#ed-${k}-t`).value;
+    return d && tm ? new Date(`${d}T${tm}`).getTime() : NaN;
   };
   if (!isNew) $("#ed-del").onclick = () => {
     if (!confirm(t("confirm_del"))) return;
@@ -324,9 +355,9 @@ function openEditor(entry, dayStart) {
     toast(t("deleted"), () => store.saveEntry(backup));
   };
   $("#ed-save").onclick = () => {
-    const s = new Date($("#ed-start").value).getTime();
+    const s = readTime("start");
     const stillRunning = runBox?.checked;
-    const en = stillRunning ? null : new Date($("#ed-end").value).getTime();
+    const en = stillRunning ? null : readTime("end");
     const err = $("#ed-err");
     if (!s) return (err.textContent = t("err_start"));
     if (!stillRunning && !en) return (err.textContent = t("err_end"));
